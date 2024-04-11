@@ -1,4 +1,15 @@
-﻿using System;
+﻿using Microsoft.Extensions.Hosting;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+namespace OrderService.Api;
+
+internal class Program
+{
+    static void Main(string[] args)
+    {
+        var host = CreateHostBuilder(args).Build();
+    }
+
+    private static IHostBuilder CreateHostBuilder(string[] args) => 
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices((context, services) => {});
+}
