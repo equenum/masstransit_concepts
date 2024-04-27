@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using OrderService.Api.Consts;
+using Shared.Common.Consts;
+using Shared.Common.Models;
 
 namespace OrderService.Api.Models.Requests;
 
