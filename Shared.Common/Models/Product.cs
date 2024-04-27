@@ -1,8 +1,7 @@
-﻿using System;
-
-namespace Shared.Common;
+﻿namespace Shared.Common.Models;
 
 public class Product
 {
-
+    public int Id { get; set;}
+    public string Name { get; set;}
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Shared.Common.Models;
+﻿namespace Shared.Common.Models;
 
 public class DeliveryDetails
 {
