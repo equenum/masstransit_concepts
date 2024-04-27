@@ -6,7 +6,7 @@ using Shared.Common.DataAccess;
 using Shared.Common.Messages;
 using Shared.Common.Models;
 
-namespace DeliveryService;
+namespace DeliveryService.Consumers;
 
 public class RegisterOrderConsumer : IConsumer<RegisterOrder>
 {
@@ -17,21 +17,32 @@ public class RegisterOrderConsumer : IConsumer<RegisterOrder>
         _logger = logger;
     }
 
-    public Task Consume(ConsumeContext<RegisterOrder> context)
+    public async Task Consume(ConsumeContext<RegisterOrder> context)
     {
-        _logger.LogInformation("Received message: {correlationId}", context.CorrelationId);
+        _logger.LogInformation("Received an order registration message.");
 
-        Database.Orders.Add(new Order()
+        var  order = new Order()
         {
-            Id = Database.Orders.Max(order => order.Id) + 1,
+            Id = Database.Orders.Any() ? Database.Orders.Max(order => order.Id) + 1 : 1,
             CustomerId = context.Message.CustomerId,
-            Type = context.Message.Type,
             DeliveryDetails = context.Message.DeliveryDetails,
-            Products = context.Message.Products
+            Products = context.Message.Products,
+            Status = OrderStatus.Registered
+        };
+
+        Database.Orders.Add(order);
+        _logger.LogInformation("Order {orderId} created.", order.Id);
+        await context.RespondAsync(new OrderRegistrationResult()
+        {
+            OrderId = order.Id
         });
         
-        // todo send order registered message
+        await context.Publish(new OrderRegistered()
+        {
+            OrderId = order.Id,
+            CustomerId = order.CustomerId
+        });
 
-        return Task.CompletedTask;
+        _logger.LogInformation("Order {orderId} registered.", order.Id);
     }
 }

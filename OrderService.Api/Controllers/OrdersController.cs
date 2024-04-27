@@ -15,14 +15,17 @@ namespace OrderService.Api.Controllers;
 public class OrdersController : ControllerBase
 {
     // private readonly IBus _bus; // standalone
-    private readonly IPublishEndpoint _endpoint; // within a container scope
+    // private readonly IPublishEndpoint _endpoint; // within a container scope
+    private readonly IRequestClient<RegisterOrder> _requestClient;
 
     public OrdersController(
         // IBus bus, 
-        IPublishEndpoint endpoint)
+        //IPublishEndpoint endpoint,
+        IRequestClient<RegisterOrder> requestClient)
     {
         // _bus = bus;
-        _endpoint = endpoint;
+        //_endpoint = endpoint;
+        _requestClient = requestClient;
     }
 
     [HttpGet]
@@ -46,25 +49,36 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateOrderRequest request)
     {
+        int orderId;
+
         try
         {
-            await _endpoint.Publish(new RegisterOrder()
+            // await _endpoint.Publish(new RegisterOrder()
+            // {
+            //     CustomerId = request.CustomerId,
+            //     Type = request.Type,
+            //     DeliveryDetails = request.DeliveryDetails,
+            //     Products = request.Products
+            // }, 
+            // sendContext => 
+            // {
+            //     sendContext.CorrelationId = Guid.NewGuid();
+            // });
+
+            var response = await _requestClient.GetResponse<OrderRegistrationResult>(new RegisterOrder()
             {
                 CustomerId = request.CustomerId,
-                Type = request.Type,
                 DeliveryDetails = request.DeliveryDetails,
                 Products = request.Products
-            }, 
-            sendContext => 
-            {
-                sendContext.CorrelationId = Guid.NewGuid();
             });
+
+            orderId = response.Message.OrderId;
         }
         catch (Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
 
-        return Created();
+        return CreatedAtRoute("GetById", new { id = orderId }, orderId);
     }
 }
