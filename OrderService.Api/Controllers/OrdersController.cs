@@ -1,7 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using MassTransit;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrderService.Api.Models;
 using OrderService.Api.Models.Requests;
+using Shared.Common.DataAccess;
+using Shared.Common.Messages;
 
 namespace OrderService.Api.Controllers;
 
@@ -9,6 +14,17 @@ namespace OrderService.Api.Controllers;
 [Route("api/public/[controller]")]
 public class OrdersController : ControllerBase
 {
+    // private readonly IBus _bus; // standalone
+    private readonly IPublishEndpoint _endpoint; // within a container scope
+
+    public OrdersController(
+        // IBus bus, 
+        IPublishEndpoint endpoint)
+    {
+        // _bus = bus;
+        _endpoint = endpoint;
+    }
+
     [HttpGet]
     public IActionResult Get()
     {
@@ -28,20 +44,27 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] CreateOrderRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateOrderRequest request)
     {
-        var latestId = Database.Orders.Max(order => order.Id);
-        var order = new Order()
+        try
         {
-            Id = latestId + 1,
-            CustomerId = request.CustomerId,
-            Type = request.Type,
-            DeliveryDetails = request.DeliveryDetails,
-            Products = request.Products
-        };
+            await _endpoint.Publish(new RegisterOrder()
+            {
+                CustomerId = request.CustomerId,
+                Type = request.Type,
+                DeliveryDetails = request.DeliveryDetails,
+                Products = request.Products
+            }, 
+            sendContext => 
+            {
+                sendContext.CorrelationId = Guid.NewGuid();
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
 
-        Database.Orders.Add(order);
-
-        return CreatedAtRoute("GetById", new { id = order.Id }, order);
+        return Created();
     }
 }
