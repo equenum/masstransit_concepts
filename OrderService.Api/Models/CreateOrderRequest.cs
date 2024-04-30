@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Shared.Common.Models;
 
-namespace OrderService.Api.Models.Requests;
+namespace OrderService.Api.Models;
 
 public class CreateOrderRequest
 {

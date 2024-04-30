@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OrderService.Api.Models.Requests;
+using OrderService.Api.Models;
 using Shared.Common.DataAccess;
 using Shared.Common.Messages;
 
